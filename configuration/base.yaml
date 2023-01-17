@@ -1,0 +1,4 @@
+application:
+  port: 8000
+database:
+  url: "mysql://user:password@localhost:5432/newsletter"
