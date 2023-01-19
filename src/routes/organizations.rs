@@ -13,7 +13,7 @@ use super::AppState;
 
 #[instrument(name = "Fetching organization", skip_all)]
 pub async fn get_organization(
-    Path(org_id): Path<i32>,
+    Path(org_id): Path<String>,
     headers: HeaderMap,
     State(state): State<AppState>,
 ) -> Response {
@@ -24,6 +24,7 @@ pub async fn get_organization(
         .db_client
         .organization()
         .find_first(vec![organization::id::equals(org_id)])
+        .with(organization::users::fetch(vec![]))
         .exec()
         .await
         .unwrap();

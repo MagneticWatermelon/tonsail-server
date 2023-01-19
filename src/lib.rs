@@ -6,6 +6,7 @@ use tracing::info;
 pub mod configuration;
 pub mod prisma;
 pub mod routes;
+pub mod util;
 
 pub async fn run(application_addr: &str, db_client: PrismaClient) {
     let state = AppState::new(db_client);
