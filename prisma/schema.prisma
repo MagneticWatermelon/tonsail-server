@@ -3,7 +3,7 @@
 
 generator client {
   provider = "cargo prisma"
-  output = "../src/prisma.rs"
+  output   = "../src/prisma.rs"
 }
 
 datasource db {
@@ -13,7 +13,7 @@ datasource db {
 }
 
 model Organization {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @db.Char(12)
   name      String   @db.VarChar(90)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -26,7 +26,7 @@ model Organization {
 }
 
 model Project {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @db.Char(12)
   name      String   @db.VarChar(90)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -36,11 +36,11 @@ model Project {
 
   // Organization relations
   organizations  Organization @relation(fields: [organizationId], references: [id])
-  organizationId Int
+  organizationId String
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @db.Char(12)
   email     String   @unique
   password  String   @db.Char(60)
   name      String   @db.VarChar(90)
@@ -52,28 +52,28 @@ model User {
 
   // Organization relation
   organizations  Organization @relation(fields: [organizationId], references: [id])
-  organizationId Int
+  organizationId String
 }
 
 model Test {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @db.Char(12)
   name      String   @db.VarChar(90)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Projects relation
   projects  Project @relation(fields: [projectId], references: [id])
-  projectId Int
+  projectId String
 }
 
 model Token {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @db.Char(12)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   valid      Boolean  @default(true)
   expiration DateTime
 
   // User relation
-  User       User    @relation(fields: [userId], references: [id])
-  userId     Int
+  User   User   @relation(fields: [userId], references: [id])
+  userId String
 }
