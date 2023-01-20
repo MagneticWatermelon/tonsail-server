@@ -68,7 +68,7 @@ where
     Role: PartialOrd + PartialEq + Clone + Send + Sync + 'static,
 {
     fn get_id(&self) -> String {
-        format!("{}", self.id)
+        self.id.to_string()
     }
 
     fn get_password_hash(&self) -> SecretVec<u8> {

@@ -3,11 +3,10 @@ use rand::rngs::OsRng;
 
 pub fn hash_password(password: &[u8]) -> String {
     let salt = SaltString::generate(&mut OsRng);
-    let hash = Argon2::default()
+    Argon2::default()
         .hash_password(password, &salt)
         .expect("Could not hash the password")
-        .to_string();
-    hash
+        .to_string()
 }
 
 pub fn check_hash(password: &[u8], hash: &str) -> bool {

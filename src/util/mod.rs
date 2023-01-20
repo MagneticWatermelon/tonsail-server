@@ -1,2 +1,2 @@
-pub mod nano_id;
 pub mod hash;
+pub mod nano_id;
