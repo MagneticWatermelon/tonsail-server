@@ -1,3 +1,5 @@
+use super::AppState;
+use crate::prisma::organization;
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
@@ -6,11 +8,6 @@ use axum::{
 use http::{HeaderMap, StatusCode};
 use serde::Deserialize;
 use tracing::instrument;
-// use tracing::error;
-
-use crate::prisma::organization;
-
-use super::AppState;
 
 #[instrument(name = "Fetching organization", skip_all)]
 pub async fn get_organization(
