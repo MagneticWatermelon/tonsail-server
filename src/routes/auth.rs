@@ -86,7 +86,7 @@ pub async fn login(
     State(state): State<AppState>,
     mut auth: AuthContext,
     Form(user): Form<LoginForm>,
-) -> StatusCode {
+) -> Response {
     let resp = state
         .db_client
         .user()
@@ -98,15 +98,15 @@ pub async fn login(
     if resp.is_some() {
         let data = resp.unwrap();
         let user = TonsailUser {
-            id: data.id,
-            password: data.password,
+            id: data.id.clone(),
+            password: data.password.clone(),
         };
         match auth.login(&user).await {
-            Ok(_) => StatusCode::OK,
-            Err(_) => StatusCode::UNAUTHORIZED,
+            Ok(_) => (StatusCode::OK, Json(data)).into_response(),
+            Err(_) => (StatusCode::UNAUTHORIZED, "").into_response(),
         }
     } else {
-        StatusCode::UNAUTHORIZED
+        (StatusCode::UNAUTHORIZED, "").into_response()
     }
 }
 
