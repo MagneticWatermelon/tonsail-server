@@ -1,5 +1,6 @@
 use super::AppState;
 use crate::prisma::{organization, user, PrismaClient};
+use crate::util::hash::{check_hash, hash_password};
 use crate::util::nano_id::generate_id;
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
@@ -97,16 +98,20 @@ pub async fn login(
 
     if resp.is_some() {
         let data = resp.unwrap();
-        let user = TonsailUser {
-            id: data.id.clone(),
-            password: data.password.clone(),
-        };
-        match auth.login(&user).await {
-            Ok(_) => (StatusCode::OK, Json(data)).into_response(),
-            Err(_) => (StatusCode::UNAUTHORIZED, "").into_response(),
+        if !check_hash(user.password.as_bytes(), &data.password) {
+            (StatusCode::UNAUTHORIZED, "Unable to login").into_response()
+        } else {
+            let user = TonsailUser {
+                id: data.id.clone(),
+                password: data.password.clone(),
+            };
+            match auth.login(&user).await {
+                Ok(_) => (StatusCode::OK, Json(data)).into_response(),
+                Err(_) => (StatusCode::UNAUTHORIZED, "").into_response(),
+            }
         }
     } else {
-        (StatusCode::UNAUTHORIZED, "").into_response()
+        (StatusCode::UNAUTHORIZED, "Unable to login").into_response()
     }
 }
 
@@ -148,7 +153,7 @@ async fn create_user(
                 .create(
                     generate_id(),
                     user.email,
-                    user.password,
+                    hash_password(user.password.as_bytes()),
                     user.name,
                     organization::id::equals(new_org.id.clone()),
                     vec![],

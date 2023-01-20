@@ -32,6 +32,7 @@ prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust
 dotenvy = "0.15.6"
 serde-aux = "4.1.2"
 axum-login = "0.4.1"
-rand = { version = "0.8.5", features = ["min_const_gen"] }
+rand = { version = "0.8.5", features = ["std", "min_const_gen"] }
 eyre = "0.6.8"
 nanoid = "0.4.0"
+argon2 = "0.4.1"
