@@ -20,6 +20,7 @@ use tower_http::{
 use tracing::{Level, Span};
 
 use self::auth::{login, register_new_user, TonsailUser, TonsailUserStore};
+use self::organizations::update_organization;
 
 pub mod auth;
 pub mod health_check;
@@ -40,7 +41,10 @@ pub fn create_router(state: AppState) -> Router {
         .route("/login", post(login))
         .route("/register", post(register_new_user))
         .route("/health_check", get(health_check))
-        .route("/organizations/:organization_id", get(get_organization))
+        .route(
+            "/organizations/:organization_id",
+            get(get_organization).put(update_organization),
+        )
         .layer(
             CorsLayer::new()
                 .allow_methods([Method::GET, Method::POST])
