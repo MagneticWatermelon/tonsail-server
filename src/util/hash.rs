@@ -7,7 +7,6 @@ pub fn hash_password(password: &[u8]) -> String {
         .hash_password(password, &salt)
         .expect("Could not hash the password")
         .to_string();
-    println!("{hash}");
     hash
 }
 
