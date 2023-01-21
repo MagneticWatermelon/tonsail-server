@@ -15,7 +15,7 @@ pub async fn get_user(
     headers: HeaderMap,
     State(state): State<AppState>,
 ) -> Response {
-    // This can not dail as this is set in middleware
+    // This can not fail as this is set in middleware
     let _request_id = headers.get("x-request-id").unwrap();
 
     let resp = state
