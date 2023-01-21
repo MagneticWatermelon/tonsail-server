@@ -5,12 +5,13 @@ use axum_login::{
     axum_sessions::{async_session::MemoryStore, SessionLayer},
     AuthLayer,
 };
-use http::{Method, Response};
+use http::{Method, Request, Response};
+use hyper::Body;
 use tower::ServiceBuilder;
 use tower_http::{
     cors::{Any, CorsLayer},
     request_id::MakeRequestUuid,
-    trace::{DefaultMakeSpan, DefaultOnFailure, DefaultOnRequest, TraceLayer},
+    trace::{DefaultMakeSpan, DefaultOnFailure, TraceLayer},
     ServiceBuilderExt,
 };
 use tracing::{Level, Span};
@@ -48,7 +49,9 @@ pub fn add_trace_layer(router: Router<AppState>) -> Router<AppState> {
                             .level(Level::INFO)
                             .include_headers(true),
                     )
-                    .on_request(DefaultOnRequest::new().level(Level::INFO))
+                    .on_request(|_request: &Request<Body>, _span: &Span| {
+                        tracing::info!("Started request")
+                    })
                     .on_response(
                         |response: &Response<BoxBody>, latency: Duration, _span: &Span| {
                             tracing::info!(
