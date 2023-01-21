@@ -1,6 +1,7 @@
 use self::auth::{login, register_new_user};
 use self::layers::{add_auth_layer, add_cors_layer, add_trace_layer};
 use self::organizations::update_organization;
+use self::project::{create_project, get_project, update_project};
 use self::user::{get_user, update_user};
 use crate::prisma::PrismaClient;
 use axum::routing::{get, post};
@@ -14,6 +15,7 @@ pub mod auth;
 pub mod health_check;
 pub mod layers;
 pub mod organizations;
+pub mod project;
 pub mod user;
 
 #[derive(Debug, Clone)]
@@ -37,6 +39,11 @@ pub fn create_router(state: AppState) -> Router {
         .route("/register", post(register_new_user))
         .route("/health_check", get(health_check))
         .route("/users/:user_id", get(get_user).put(update_user))
+        .route("/projects", post(create_project))
+        .route(
+            "/projects/:project_id",
+            get(get_project).put(update_project),
+        )
         .route(
             "/organizations/:organization_id",
             get(get_organization).put(update_organization),

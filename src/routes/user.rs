@@ -48,6 +48,7 @@ pub async fn update_user(
 ) -> Response {
     // This can not fail as this is set in middleware
     let _request_id = headers.get("x-request-id").unwrap();
+
     let mut params = vec![];
     if user.name.is_some() {
         params.push(user::name::set(user.name.unwrap()));
@@ -59,6 +60,7 @@ pub async fn update_user(
     if user.email.is_some() {
         params.push(user::email::set(user.email.unwrap()));
     }
+
     let resp = state
         .db_client
         .user()
