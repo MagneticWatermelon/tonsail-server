@@ -9,6 +9,28 @@ use http::{HeaderMap, StatusCode};
 use serde::Deserialize;
 use tracing::instrument;
 
+#[instrument(name = "Fetching all organizations", skip_all)]
+pub async fn get_organizations(headers: HeaderMap, State(state): State<AppState>) -> Response {
+    // This can not fail as this is set in middleware
+    let _request_id = headers.get("x-request-id").unwrap();
+
+    let resp = state
+        .db_client
+        .organization()
+        .find_many(vec![])
+        .exec()
+        .await;
+
+    match resp {
+        Ok(data) => Json(data).into_response(),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Could not query the database",
+        )
+            .into_response(),
+    }
+}
+
 #[instrument(name = "Fetching organization", skip_all)]
 pub async fn get_organization(
     Path(org_id): Path<String>,
