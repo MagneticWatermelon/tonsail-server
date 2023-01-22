@@ -1,6 +1,6 @@
 use self::auth::{login, register_new_user};
 use self::layers::{add_auth_layer, add_cors_layer, add_trace_layer};
-use self::organizations::update_organization;
+use self::organizations::{get_organizations, update_organization};
 use self::project::{create_project, get_project, update_project};
 use self::user::{get_user, update_user};
 use crate::prisma::PrismaClient;
@@ -44,6 +44,7 @@ pub fn create_router(state: AppState) -> Router {
             "/projects/:project_id",
             get(get_project).put(update_project),
         )
+        .route("/organizations", get(get_organizations))
         .route(
             "/organizations/:organization_id",
             get(get_organization).put(update_organization),
