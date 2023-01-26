@@ -99,7 +99,7 @@ pub async fn login(
     if resp.is_some() {
         let data = resp.unwrap();
         if !check_hash(user.password.as_bytes(), &data.password) {
-            (StatusCode::UNAUTHORIZED, "Unable to login").into_response()
+            (StatusCode::UNAUTHORIZED, "Unable to login with provided credentials").into_response()
         } else {
             let user = TonsailUser {
                 id: data.id.clone(),
