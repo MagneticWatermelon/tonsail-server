@@ -1,10 +1,15 @@
 use tonsail_server::{configuration::get_configuration, prisma::PrismaClient, run};
-use tracing::subscriber::set_global_default;
+use tracing::{info, subscriber::set_global_default};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, EnvFilter, Registry};
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().expect("Could not find a .env file");
+    match dotenvy::dotenv() {
+        Ok(_) => {}
+        Err(_) => {
+            info!("No .env file found");
+        }
+    }
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     let formatting_layer = tracing_subscriber::fmt::layer()
         .compact()
