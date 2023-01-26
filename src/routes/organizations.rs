@@ -45,6 +45,7 @@ pub async fn get_organization(
         .organization()
         .find_first(vec![organization::id::equals(org_id)])
         .with(organization::users::fetch(vec![]))
+        .with(organization::projects::fetch(vec![]))
         .exec()
         .await
         .unwrap();

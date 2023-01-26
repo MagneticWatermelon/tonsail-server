@@ -1,6 +1,6 @@
 use super::AppState;
 use crate::{
-    prisma::{organization, project},
+    prisma::{organization, project, test},
     util::nano_id::generate_id,
 };
 use axum::{
@@ -58,6 +58,7 @@ pub async fn get_project(
         .db_client
         .project()
         .find_first(vec![project::id::equals(project_id)])
+        .with(project::tests::fetch(vec![]))
         .exec()
         .await
         .unwrap();
