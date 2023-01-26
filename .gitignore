@@ -1,4 +1,6 @@
 /target
 /src/prisma.rs
 .env
+fly.toml
+.dockerignore
 
