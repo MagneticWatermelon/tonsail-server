@@ -2,14 +2,14 @@ use std::time::Duration;
 
 use axum::{body::BoxBody, Router};
 use axum_login::{
-    axum_sessions::{async_session::MemoryStore, SessionLayer},
+    axum_sessions::{async_session::MemoryStore, SameSite, SessionLayer},
     AuthLayer,
 };
 use http::{Method, Request, Response};
 use hyper::Body;
 use tower::ServiceBuilder;
 use tower_http::{
-    cors::{Any, CorsLayer},
+    cors::CorsLayer,
     request_id::MakeRequestUuid,
     trace::{DefaultMakeSpan, DefaultOnFailure, TraceLayer},
     ServiceBuilderExt,
@@ -22,10 +22,15 @@ use super::{
 };
 
 pub fn add_cors_layer(router: Router<AppState>) -> Router<AppState> {
+    let origins = [
+        "https://tonsail.dev".parse().unwrap(),
+        "https://app.tonsail.dev".parse().unwrap(),
+    ];
     router.layer(
         CorsLayer::new()
-            .allow_methods([Method::GET, Method::POST])
-            .allow_origin(Any),
+            .allow_credentials(true)
+            .allow_methods([Method::GET, Method::POST, Method::PUT])
+            .allow_origin(origins),
     )
 }
 
@@ -33,9 +38,11 @@ type TonsailAuthLayer = AuthLayer<TonsailUserStore, TonsailUser>;
 pub fn add_auth_layer(router: Router<AppState>, state: AppState) -> Router<AppState> {
     let user_store = TonsailUserStore::new(state.db_client.clone());
     let auth_layer: TonsailAuthLayer = AuthLayer::new(user_store, &state.secret);
-    router
-        .layer(auth_layer)
-        .layer(SessionLayer::new(MemoryStore::new(), &state.secret))
+    router.layer(auth_layer).layer(
+        SessionLayer::new(MemoryStore::new(), &state.secret)
+            .with_cookie_name("api_sid")
+            .with_same_site_policy(SameSite::Strict),
+    )
 }
 
 pub fn add_trace_layer(router: Router<AppState>) -> Router<AppState> {
