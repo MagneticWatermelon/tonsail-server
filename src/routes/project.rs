@@ -1,6 +1,6 @@
 use super::AppState;
 use crate::{
-    prisma::{organization, project, test},
+    prisma::{organization, project},
     util::nano_id::generate_id,
 };
 use axum::{

@@ -1,3 +1,6 @@
+use bb8::Pool;
+use bb8_postgres::PostgresConnectionManager;
+use tokio_postgres::NoTls;
 use tonsail_server::{configuration::get_configuration, prisma::PrismaClient, run};
 use tracing::{info, subscriber::set_global_default};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, EnvFilter, Registry};
@@ -27,7 +30,15 @@ async fn main() {
         .await
         .expect("Failed to get Prisma client");
 
+    // set up connection pool
+    let manager = PostgresConnectionManager::new_from_stringlike(
+        "postgresql://admin:quest@localhost:8812/qdb",
+        NoTls,
+    )
+    .unwrap();
+    let pool = Pool::builder().build(manager).await.unwrap();
+
     let addr = config.application.address_string();
 
-    run(&addr, client).await
+    run(&addr, client, pool).await
 }

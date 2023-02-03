@@ -36,3 +36,8 @@ rand = { version = "0.8.5", features = ["std", "min_const_gen"] }
 eyre = "0.6.8"
 nanoid = "0.4.0"
 argon2 = "0.4.1"
+bb8 = "0.8.0"
+bb8-postgres = "0.8.1"
+tokio-postgres = "0.7.7"
+postgres-types = { version = "0.2.4", features = ["derive", "with-chrono-0_4"] }
+sea-query = { version = "0.28.3", features = ["derive"] }
