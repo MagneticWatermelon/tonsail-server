@@ -4112,6 +4112,7 @@ dependencies = [
  "sea-query",
  "serde",
  "serde-aux",
+ "thiserror",
  "tokio",
  "tokio-postgres",
  "tower",
