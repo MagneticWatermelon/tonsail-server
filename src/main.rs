@@ -1,7 +1,7 @@
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::NoTls;
-use tonsail_server::{configuration::get_configuration, prisma::PrismaClient, run};
+use tonsail_server::{configuration::get_configuration, run, util::retry::try_build_prisma};
 use tracing::{info, subscriber::set_global_default};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, EnvFilter, Registry};
 
@@ -25,8 +25,7 @@ async fn main() {
 
     let config = get_configuration().expect("Failed to read configuration");
 
-    let client = PrismaClient::_builder()
-        .build()
+    let client = try_build_prisma(3)
         .await
         .expect("Failed to get Prisma client");
 
