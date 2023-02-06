@@ -3,6 +3,7 @@ use self::layers::{add_auth_layer, add_cors_layer, add_trace_layer};
 use self::metrics::get_metrics;
 use self::organizations::{get_organizations, update_organization};
 use self::project::{create_project, get_project, update_project};
+use self::tests::{create_test, get_test};
 use self::user::{get_user, update_user};
 use crate::prisma::PrismaClient;
 use axum::routing::{get, post};
@@ -21,6 +22,7 @@ pub mod layers;
 pub mod metrics;
 pub mod organizations;
 pub mod project;
+pub mod tests;
 pub mod user;
 
 #[derive(Debug, Clone)]
@@ -47,6 +49,8 @@ pub fn create_router(state: AppState) -> Router {
         .route("/metrics", get(get_metrics))
         .route("/health_check", get(health_check))
         .route("/users/:user_id", get(get_user).put(update_user))
+        .route("/tests", post(create_test))
+        .route("/tests/:test_id", get(get_test))
         .route("/projects", post(create_project))
         .route(
             "/projects/:project_id",
