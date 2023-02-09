@@ -52,7 +52,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         .add_source(config::File::from(config_dir.join(environment.as_str())).required(true))
         //E.g 'APPLICATION_PORT=5001 would set 'Settings.application.port'
         .add_source(config::Environment::with_prefix("").separator("_"))
-        .add_source(config::Environment::with_prefix("APP").separator("_"))
+        .add_source(config::Environment::with_prefix("DB").separator("_"))
         .build()?;
 
     settings.try_deserialize::<Settings>()
