@@ -11,6 +11,7 @@ use axum::routing::{get, post};
 use axum::Router;
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
+use fred::pool::RedisPool;
 use health_check::health_check;
 use organizations::get_organization;
 use rand::Rng;
@@ -27,18 +28,24 @@ pub mod test_run;
 pub mod tests;
 pub mod user;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppState {
     db_client: Arc<PrismaClient>,
     pg_client: Pool<PostgresConnectionManager<NoTls>>,
+    rds_client: RedisPool,
     secret: [u8; 64],
 }
 
 impl AppState {
-    pub fn new(client: PrismaClient, pg_client: Pool<PostgresConnectionManager<NoTls>>) -> Self {
+    pub fn new(
+        client: PrismaClient,
+        rds_client: RedisPool,
+        pg_client: Pool<PostgresConnectionManager<NoTls>>,
+    ) -> Self {
         Self {
             db_client: Arc::new(client),
             pg_client,
+            rds_client,
             secret: rand::thread_rng().gen::<[u8; 64]>(),
         }
     }

@@ -5,11 +5,17 @@ use serde_aux::prelude::deserialize_number_from_string;
 #[derive(Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
+    pub redis: RedisSettings,
     pub application: ApplicationSettings,
 }
 
 #[derive(Deserialize)]
 pub struct DatabaseSettings {
+    pub url: String,
+}
+
+#[derive(Deserialize)]
+pub struct RedisSettings {
     pub url: String,
 }
 
@@ -46,6 +52,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         .add_source(config::File::from(config_dir.join(environment.as_str())).required(true))
         //E.g 'APPLICATION_PORT=5001 would set 'Settings.application.port'
         .add_source(config::Environment::with_prefix("").separator("_"))
+        .add_source(config::Environment::with_prefix("APP").separator("_"))
         .build()?;
 
     settings.try_deserialize::<Settings>()

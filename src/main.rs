@@ -1,5 +1,6 @@
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
+use fred::{pool::RedisPool, types::RedisConfig};
 use tokio_postgres::NoTls;
 use tonsail_server::{configuration::get_configuration, run, util::retry::try_build_prisma};
 use tracing::{info, subscriber::set_global_default};
@@ -37,7 +38,16 @@ async fn main() {
     .unwrap();
     let pool = Pool::builder().build(manager).await.unwrap();
 
+    // Redis pool creation
+    let rds_config = RedisConfig::from_url(&config.redis.url).unwrap();
+    let rds_pool = RedisPool::new(rds_config, 6).unwrap();
+    rds_pool.connect(None);
+    rds_pool
+        .wait_for_connect()
+        .await
+        .expect("Could not connect to Redis");
+
     let addr = config.application.address_string();
 
-    run(&addr, client, pool).await
+    run(&addr, client, rds_pool, pool).await
 }

@@ -1,8 +1,9 @@
 use std::time::Duration;
 
+use async_fred_session::RedisSessionStore;
 use axum::{body::BoxBody, Router};
 use axum_login::{
-    axum_sessions::{async_session::MemoryStore, SameSite, SessionLayer},
+    axum_sessions::{SameSite, SessionLayer},
     AuthLayer,
 };
 use http::{Method, Request, Response};
@@ -37,9 +38,11 @@ pub fn add_cors_layer(router: Router<AppState>) -> Router<AppState> {
 type TonsailAuthLayer = AuthLayer<TonsailUserStore, TonsailUser>;
 pub fn add_auth_layer(router: Router<AppState>, state: AppState) -> Router<AppState> {
     let user_store = TonsailUserStore::new(state.db_client.clone());
+    let session_store =
+        RedisSessionStore::from_pool(state.rds_client, Some("tonsail-session/".into()));
     let auth_layer: TonsailAuthLayer = AuthLayer::new(user_store, &state.secret);
     router.layer(auth_layer).layer(
-        SessionLayer::new(MemoryStore::new(), &state.secret)
+        SessionLayer::new(session_store, &state.secret)
             .with_cookie_name("api_sid")
             .with_same_site_policy(SameSite::Strict),
     )
