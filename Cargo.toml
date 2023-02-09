@@ -42,3 +42,5 @@ tokio-postgres = "0.7.7"
 postgres-types = { version = "0.2.4", features = ["derive", "with-chrono-0_4"] }
 sea-query = { version = "0.28.3", features = ["derive"] }
 thiserror = "1.0.38"
+async-fred-session = "0.1.2"
+fred = "5.2.0"
