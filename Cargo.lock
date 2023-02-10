@@ -1250,6 +1250,8 @@ dependencies = [
  "tokio-native-tls 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-stream",
  "tokio-util 0.6.10",
+ "tracing",
+ "tracing-futures",
  "url",
 ]
 

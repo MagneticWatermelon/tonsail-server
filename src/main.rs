@@ -39,7 +39,8 @@ async fn main() {
     let pool = Pool::builder().build(manager).await.unwrap();
 
     // Redis pool creation
-    let rds_config = RedisConfig::from_url(&config.redis.url).unwrap();
+    let mut rds_config = RedisConfig::from_url(&config.redis.url).unwrap();
+    rds_config.tracing = true;
     let rds_pool = RedisPool::new(rds_config, 6).unwrap();
     rds_pool.connect(None);
     rds_pool
