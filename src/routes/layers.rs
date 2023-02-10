@@ -3,7 +3,7 @@ use std::time::Duration;
 use async_fred_session::RedisSessionStore;
 use axum::{body::BoxBody, Router};
 use axum_login::{
-    axum_sessions::{SameSite, SessionLayer},
+    axum_sessions::{PersistencePolicy, SameSite, SessionLayer},
     AuthLayer,
 };
 use http::{Method, Request, Response};
@@ -43,6 +43,7 @@ pub fn add_auth_layer(router: Router<AppState>, state: AppState) -> Router<AppSt
     let auth_layer: TonsailAuthLayer = AuthLayer::new(user_store, &state.secret);
     router.layer(auth_layer).layer(
         SessionLayer::new(session_store, &state.secret)
+            .with_persistence_policy(PersistencePolicy::ExistingOnly)
             .with_cookie_name("api_sid")
             .with_same_site_policy(SameSite::Strict),
     )
