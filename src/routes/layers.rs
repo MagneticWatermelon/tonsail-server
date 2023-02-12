@@ -1,6 +1,3 @@
-use std::time::Duration;
-
-use async_fred_session::RedisSessionStore;
 use axum::{body::BoxBody, Router};
 use axum_login::{
     axum_sessions::{PersistencePolicy, SameSite, SessionLayer},
@@ -8,7 +5,14 @@ use axum_login::{
 };
 use http::{Method, Request, Response};
 use hyper::Body;
+use std::time::Duration;
 use tower::ServiceBuilder;
+// use tower_http::cors::Any;
+use super::{
+    auth::{TonsailUser, TonsailUserStore},
+    AppState,
+};
+use crate::util::redis_session_store::RedisSessionStore;
 use tower_http::{
     cors::CorsLayer,
     request_id::MakeRequestUuid,
@@ -16,11 +20,6 @@ use tower_http::{
     ServiceBuilderExt,
 };
 use tracing::{Level, Span};
-
-use super::{
-    auth::{TonsailUser, TonsailUserStore},
-    AppState,
-};
 
 pub fn add_cors_layer(router: Router<AppState>) -> Router<AppState> {
     let origins = [
@@ -32,6 +31,7 @@ pub fn add_cors_layer(router: Router<AppState>) -> Router<AppState> {
             .allow_credentials(true)
             .allow_methods([Method::GET, Method::POST, Method::PUT])
             .allow_origin(origins),
+        // .allow_origin(Any),
     )
 }
 

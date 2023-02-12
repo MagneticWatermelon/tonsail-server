@@ -42,5 +42,5 @@ tokio-postgres = "0.7.7"
 postgres-types = { version = "0.2.4", features = ["derive", "with-chrono-0_4"] }
 sea-query = { version = "0.28.3", features = ["derive"] }
 thiserror = "1.0.38"
-async-fred-session = "0.1.2"
-fred = { version = "5.2.0", features = ["partial-tracing"] }
+fred = { git = "https://github.com/aembke/fred.rs.git", features = ["partial-tracing", "enable-rustls"] }
+futures = "0.3.26"
