@@ -15,6 +15,7 @@ async fn main() {
         }
     }
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+
     let formatting_layer = tracing_subscriber::fmt::layer()
         .compact()
         .with_file(false)
@@ -30,19 +31,16 @@ async fn main() {
         .await
         .expect("Failed to get Prisma client");
 
-    // set up connection pool
-    let manager = PostgresConnectionManager::new_from_stringlike(
-        "postgresql://admin:quest@localhost:8812/qdb",
-        NoTls,
-    )
-    .unwrap();
+    // set up connection pool for QuestDB
+    let manager =
+        PostgresConnectionManager::new_from_stringlike(&config.questdb.url, NoTls).unwrap();
+
     let pool = Pool::builder().build(manager).await.unwrap();
 
     // Redis pool creation
-    let mut rds_config = RedisConfig::from_url(&config.redis.url).unwrap();
-    rds_config.tracing = true;
-    let rds_pool = RedisPool::new(rds_config, 6).unwrap();
-    rds_pool.connect(None);
+    let rds_config = RedisConfig::from_url(&config.redis.url).unwrap();
+    let rds_pool = RedisPool::new(rds_config, None, None, 6).unwrap();
+    rds_pool.connect();
     rds_pool
         .wait_for_connect()
         .await

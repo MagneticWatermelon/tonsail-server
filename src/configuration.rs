@@ -6,6 +6,7 @@ use serde_aux::prelude::deserialize_number_from_string;
 pub struct Settings {
     pub database: DatabaseSettings,
     pub redis: RedisSettings,
+    pub questdb: QuestDBSettings,
     pub application: ApplicationSettings,
 }
 
@@ -16,6 +17,11 @@ pub struct DatabaseSettings {
 
 #[derive(Deserialize)]
 pub struct RedisSettings {
+    pub url: String,
+}
+
+#[derive(Deserialize)]
+pub struct QuestDBSettings {
     pub url: String,
 }
 
