@@ -1,6 +1,7 @@
 use super::AppState;
 use crate::prisma::{organization, user, PrismaClient};
 use crate::util::hash::{check_hash, hash_password};
+use crate::util::http_error::HttpError;
 use crate::util::nano_id::generate_id;
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
@@ -8,17 +9,41 @@ use axum::{async_trait, Form, Json};
 use axum_login::secrecy::SecretVec;
 use axum_login::{AuthUser, UserStore};
 use http::StatusCode;
-use prisma_client_rust::QueryError;
-use serde::Deserialize;
+use prisma_client_rust::{chrono, QueryError};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::instrument;
 
 type AuthContext = axum_login::extractors::AuthContext<TonsailUser, TonsailUserStore>;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TonsailUser {
     id: String,
+    name: String,
+    email: String,
     password: String,
+    #[serde(rename = "createdAt")]
+    created_at: chrono::DateTime<chrono::FixedOffset>,
+    #[serde(rename = "updatedAt")]
+    updated_at: chrono::DateTime<chrono::FixedOffset>,
+    organization: Option<Box<organization::Data>>,
+    #[serde(rename = "organizationId")]
+    organization_id: String,
+}
+
+impl From<user::Data> for TonsailUser {
+    fn from(u: user::Data) -> Self {
+        Self {
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            password: u.password,
+            created_at: u.created_at,
+            updated_at: u.updated_at,
+            organization: u.organization,
+            organization_id: u.organization_id,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -48,10 +73,7 @@ where
             .await?;
 
         match user {
-            Some(u) => Ok(Some(TonsailUser {
-                id: u.id,
-                password: u.password,
-            })),
+            Some(u) => Ok(Some(TonsailUser::from(u))),
             None => Ok(None),
         }
     }
@@ -82,6 +104,24 @@ pub struct LoginForm {
     password: String,
 }
 
+pub async fn check_me(auth: AuthContext) -> Response {
+    if let Some(user) = auth.current_user {
+        return Json(user).into_response();
+    }
+    HttpError::new(
+        StatusCode::UNAUTHORIZED,
+        "Not Authorized",
+        "Token not found",
+    )
+    .into_response()
+}
+
+#[instrument(name = "User attempting to logout", skip_all)]
+pub async fn logout(mut auth: AuthContext) -> StatusCode {
+    auth.logout().await;
+    StatusCode::OK
+}
+
 #[instrument(name = "User attempting to login", skip_all)]
 pub async fn login(
     State(state): State<AppState>,
@@ -99,19 +139,21 @@ pub async fn login(
     if resp.is_some() {
         let data = resp.unwrap();
         if !check_hash(user.password.as_bytes(), &data.password) {
-            (StatusCode::UNAUTHORIZED, "Unable to login with provided credentials").into_response()
+            HttpError::new(
+                StatusCode::UNAUTHORIZED,
+                "Login failed",
+                "Unable to login with provided credentials",
+            )
+            .into_response()
         } else {
-            let user = TonsailUser {
-                id: data.id.clone(),
-                password: data.password.clone(),
-            };
+            let user = TonsailUser::from(data.clone());
             match auth.login(&user).await {
-                Ok(_) => (StatusCode::OK, Json(data)).into_response(),
+                Ok(_) => (StatusCode::OK, Json(user)).into_response(),
                 Err(_) => (StatusCode::UNAUTHORIZED, "").into_response(),
             }
         }
     } else {
-        (StatusCode::UNAUTHORIZED, "Unable to login").into_response()
+        HttpError::new(StatusCode::UNAUTHORIZED, "Login failed", "Unable to login").into_response()
     }
 }
 
@@ -129,7 +171,12 @@ pub async fn register_new_user(
 ) -> Response {
     match create_user(State(state), Form(user)).await {
         Ok((_new_org, new_user)) => Json(new_user).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        Err(e) => HttpError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Register failed",
+            e.to_string().as_str(),
+        )
+        .into_response(),
     }
 }
 
