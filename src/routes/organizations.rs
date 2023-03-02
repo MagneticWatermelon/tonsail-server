@@ -1,12 +1,15 @@
 use super::AppState;
-use crate::{prisma::organization, util::app_error::AppError};
+use crate::{
+    domain::organization::UpdateForm,
+    prisma::organization,
+    util::{app_error::AppError, validation::ValidatedForm},
+};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
-    Form, Json,
+    Json,
 };
 use http::StatusCode;
-use serde::Deserialize;
 use tracing::instrument;
 
 #[instrument(name = "Fetching all organizations", skip_all)]
@@ -41,16 +44,11 @@ pub async fn get_organization(
     }
 }
 
-#[derive(Deserialize)]
-pub struct UpdateForm {
-    name: String,
-}
-
 #[instrument(name = "Updating organization", skip_all)]
 pub async fn update_organization(
     Path(org_id): Path<String>,
     State(state): State<AppState>,
-    Form(org): Form<UpdateForm>,
+    ValidatedForm(org): ValidatedForm<UpdateForm>,
 ) -> Result<Response, AppError> {
     let data = state
         .db_client
