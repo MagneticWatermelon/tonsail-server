@@ -8,6 +8,7 @@ use tokio_postgres::NoTls;
 use tracing::info;
 
 pub mod configuration;
+pub mod domain;
 pub mod prisma;
 pub mod routes;
 pub mod util;
