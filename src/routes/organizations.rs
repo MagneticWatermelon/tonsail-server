@@ -1,45 +1,31 @@
 use super::AppState;
-use crate::prisma::organization;
+use crate::{prisma::organization, util::app_error::AppError};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
     Form, Json,
 };
-use http::{HeaderMap, StatusCode};
+use http::StatusCode;
 use serde::Deserialize;
 use tracing::instrument;
 
 #[instrument(name = "Fetching all organizations", skip_all)]
-pub async fn get_organizations(headers: HeaderMap, State(state): State<AppState>) -> Response {
-    // This can not fail as this is set in middleware
-    let _request_id = headers.get("x-request-id").unwrap();
-
-    let resp = state
+pub async fn get_organizations(State(state): State<AppState>) -> Result<Response, AppError> {
+    let data = state
         .db_client
         .organization()
         .find_many(vec![])
         .exec()
-        .await;
+        .await?;
 
-    match resp {
-        Ok(data) => Json(data).into_response(),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Could not query the database",
-        )
-            .into_response(),
-    }
+    Ok(Json(data).into_response())
 }
 
 #[instrument(name = "Fetching organization", skip_all)]
 pub async fn get_organization(
     Path(org_id): Path<String>,
-    headers: HeaderMap,
     State(state): State<AppState>,
-) -> Response {
-    // This can not fail as this is set in middleware
-    let _request_id = headers.get("x-request-id").unwrap();
-
+) -> Result<Response, AppError> {
     let resp = state
         .db_client
         .organization()
@@ -47,12 +33,11 @@ pub async fn get_organization(
         .with(organization::users::fetch(vec![]))
         .with(organization::projects::fetch(vec![]))
         .exec()
-        .await
-        .unwrap();
+        .await?;
 
     match resp {
-        Some(data) => Json(data).into_response(),
-        None => (StatusCode::NOT_FOUND, "No such organization exists").into_response(),
+        Some(data) => Ok(Json(data).into_response()),
+        None => Ok((StatusCode::NO_CONTENT, Json(())).into_response()),
     }
 }
 
@@ -64,14 +49,10 @@ pub struct UpdateForm {
 #[instrument(name = "Updating organization", skip_all)]
 pub async fn update_organization(
     Path(org_id): Path<String>,
-    headers: HeaderMap,
     State(state): State<AppState>,
     Form(org): Form<UpdateForm>,
-) -> Response {
-    // This can not fail as this is set in middleware
-    let _request_id = headers.get("x-request-id").unwrap();
-
-    let resp = state
+) -> Result<Response, AppError> {
+    let data = state
         .db_client
         .organization()
         .update(
@@ -79,10 +60,7 @@ pub async fn update_organization(
             vec![organization::name::set(org.name)],
         )
         .exec()
-        .await;
+        .await?;
 
-    match resp {
-        Ok(data) => Json(data).into_response(),
-        Err(_) => (StatusCode::NOT_FOUND, "No such organization exists").into_response(),
-    }
+    Ok(Json(data).into_response())
 }
