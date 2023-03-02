@@ -1,3 +1,4 @@
+pub mod app_error;
 pub mod hash;
 pub mod http_error;
 pub mod nano_id;
