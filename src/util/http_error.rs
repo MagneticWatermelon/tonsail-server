@@ -8,17 +8,24 @@ use serde::Serialize;
 #[derive(Serialize)]
 pub struct HttpError {
     #[serde(skip_serializing)]
-    status_code: StatusCode,
-    title: String,
-    message: String,
+    pub status_code: StatusCode,
+    pub body: HttpErrorBody,
+}
+
+#[derive(Serialize)]
+pub struct HttpErrorBody {
+    pub title: String,
+    pub message: String,
 }
 
 impl HttpError {
     pub fn new(status_code: StatusCode, title: &str, message: &str) -> Self {
         Self {
             status_code,
-            title: title.to_string(),
-            message: message.to_string(),
+            body: HttpErrorBody {
+                title: title.to_string(),
+                message: message.to_string(),
+            },
         }
     }
 }
