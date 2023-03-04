@@ -15,7 +15,6 @@ use bb8_postgres::PostgresConnectionManager;
 use fred::pool::RedisPool;
 use health_check::health_check;
 use organizations::get_organization;
-use rand::Rng;
 use std::sync::Arc;
 use tokio_postgres::NoTls;
 
@@ -34,7 +33,7 @@ pub struct AppState {
     db_client: Arc<PrismaClient>,
     pg_client: Pool<PostgresConnectionManager<NoTls>>,
     rds_client: RedisPool,
-    secret: [u8; 64],
+    secret: Vec<u8>,
 }
 
 impl AppState {
@@ -42,12 +41,13 @@ impl AppState {
         client: PrismaClient,
         rds_client: RedisPool,
         pg_client: Pool<PostgresConnectionManager<NoTls>>,
+        secret: Vec<u8>,
     ) -> Self {
         Self {
             db_client: Arc::new(client),
             pg_client,
             rds_client,
-            secret: rand::thread_rng().gen::<[u8; 64]>(),
+            secret,
         }
     }
 }

@@ -48,5 +48,5 @@ async fn main() {
 
     let addr = config.application.address_string();
 
-    run(&addr, client, rds_pool, pool).await
+    run(&addr, client, rds_pool, pool, config.secret).await
 }
