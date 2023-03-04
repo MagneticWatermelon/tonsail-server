@@ -43,7 +43,6 @@ impl AppState {
         pg_client: Pool<PostgresConnectionManager<NoTls>>,
         secret: Vec<u8>,
     ) -> Self {
-        println!("{:?}", secret);
         Self {
             db_client: Arc::new(client),
             pg_client,
