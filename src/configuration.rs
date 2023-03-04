@@ -1,6 +1,6 @@
 use config::Config;
 use serde::Deserialize;
-use serde_aux::prelude::deserialize_number_from_string;
+use serde_aux::prelude::{deserialize_number_from_string, deserialize_vec_from_string_or_vec};
 
 #[derive(Deserialize)]
 pub struct Settings {
@@ -8,6 +8,8 @@ pub struct Settings {
     pub redis: RedisSettings,
     pub questdb: QuestDBSettings,
     pub application: ApplicationSettings,
+    #[serde(deserialize_with = "deserialize_vec_from_string_or_vec")]
+    pub secret: Vec<u8>,
 }
 
 #[derive(Deserialize)]
@@ -57,7 +59,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         .add_source(config::File::from(config_dir.join("base")).required(true))
         .add_source(config::File::from(config_dir.join(environment.as_str())).required(true))
         //E.g 'APPLICATION_PORT=5001 would set 'Settings.application.port'
-        .add_source(config::Environment::with_prefix("").separator("_"))
+        .add_source(config::Environment::with_prefix("APP").separator("_"))
         .add_source(config::Environment::with_prefix("DB").separator("_"))
         .build()?;
 
