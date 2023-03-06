@@ -21,7 +21,7 @@ pub struct TonsailUser {
     id: String,
     name: String,
     email: String,
-    password: String,
+    pub password: String,
     #[serde(rename = "createdAt")]
     created_at: chrono::DateTime<chrono::FixedOffset>,
     #[serde(rename = "updatedAt")]

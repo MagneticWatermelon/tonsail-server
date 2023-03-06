@@ -1,75 +1,98 @@
-use super::AppState;
-use crate::{prisma::user, util::hash::hash_password};
+use super::{
+    auth::{TonsailUser, TonsailUserStore},
+    AppState,
+};
+use crate::{
+    domain::user::{UserPasswordForm, UserUpdateForm},
+    prisma::user,
+    util::{
+        app_error::AppError,
+        hash::{check_hash, hash_password},
+        http_error::HttpError,
+        validation::ValidatedForm,
+    },
+};
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Response},
-    Form, Json,
+    Extension, Json,
 };
-use http::{HeaderMap, StatusCode};
-use serde::Deserialize;
+use http::StatusCode;
 use tracing::instrument;
 
 #[instrument(name = "Fetching user", skip_all)]
 pub async fn get_user(
     Path(user_id): Path<String>,
-    headers: HeaderMap,
     State(state): State<AppState>,
-) -> Response {
-    // This can not fail as this is set in middleware
-    let _request_id = headers.get("x-request-id").unwrap();
-
-    let resp = state
+) -> Result<Response, AppError> {
+    let data = state
         .db_client
         .user()
         .find_first(vec![user::id::equals(user_id)])
         .exec()
-        .await
-        .unwrap();
+        .await?;
 
-    match resp {
-        Some(data) => Json(data).into_response(),
-        None => (StatusCode::NOT_FOUND, "No such user exists").into_response(),
-    }
-}
-
-#[derive(Deserialize)]
-pub struct UpdateForm {
-    name: Option<String>,
-    email: Option<String>,
-    password: Option<String>,
+    Ok(Json(data).into_response())
 }
 
 #[instrument(name = "Updating user", skip_all)]
 pub async fn update_user(
     Path(user_id): Path<String>,
-    headers: HeaderMap,
     State(state): State<AppState>,
-    Form(user): Form<UpdateForm>,
-) -> Response {
-    // This can not fail as this is set in middleware
-    let _request_id = headers.get("x-request-id").unwrap();
-
+    ValidatedForm(user): ValidatedForm<UserUpdateForm>,
+) -> Result<Response, AppError> {
     let mut params = vec![];
     if user.name.is_some() {
         params.push(user::name::set(user.name.unwrap()));
     }
-    if user.password.is_some() {
-        let hashed = hash_password(user.password.unwrap().as_bytes());
-        params.push(user::password::set(hashed));
-    }
+
     if user.email.is_some() {
         params.push(user::email::set(user.email.unwrap()));
     }
 
-    let resp = state
+    let data = state
         .db_client
         .user()
         .update(user::id::equals(user_id), params)
         .exec()
-        .await;
+        .await?;
 
-    match resp {
-        Ok(data) => Json(data).into_response(),
-        Err(e) => (StatusCode::NOT_FOUND, e.to_string()).into_response(),
+    Ok(Json(data).into_response())
+}
+
+type AuthContext = axum_login::extractors::AuthContext<TonsailUser, TonsailUserStore>;
+
+#[instrument(name = "Updating password", skip_all)]
+pub async fn update_password(
+    Path(user_id): Path<String>,
+    State(state): State<AppState>,
+    mut auth: AuthContext,
+    Extension(user): Extension<TonsailUser>,
+    ValidatedForm(password): ValidatedForm<UserPasswordForm>,
+) -> Result<Response, AppError> {
+    if !check_hash(password.old.as_bytes(), &user.password) {
+        return Err(AppError::Http(HttpError::new(
+            StatusCode::BAD_REQUEST,
+            "Unable to update password",
+            "Current password is invalid",
+        )));
+    }
+    let hashed = hash_password(password.new.as_bytes());
+
+    let data = state
+        .db_client
+        .user()
+        .update(user::id::equals(user_id), vec![user::password::set(hashed)])
+        .exec()
+        .await?;
+
+    let user = TonsailUser::from(data.clone());
+    match auth.login(&user).await {
+        Ok(_) => Ok(Json(data).into_response()),
+        Err(_) => Err(AppError::Http(HttpError::new(
+            StatusCode::UNAUTHORIZED,
+            "Unable to login",
+            "Crendentials are invalid",
+        ))),
     }
 }

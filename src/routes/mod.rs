@@ -5,9 +5,9 @@ use self::organizations::{get_organizations, update_organization};
 use self::project::{create_project, get_project, update_project};
 use self::test_run::{create_test_run, get_test_run};
 use self::tests::{create_test, get_test};
-use self::user::{get_user, update_user};
+use self::user::{get_user, update_password, update_user};
 use crate::prisma::PrismaClient;
-use axum::routing::{get, post};
+use axum::routing::{get, post, put};
 use axum::Router;
 use axum_login::RequireAuthorizationLayer;
 use bb8::Pool;
@@ -58,6 +58,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/logout", post(logout))
         .route("/metrics", get(get_metrics))
         .route("/users/:user_id", get(get_user).put(update_user))
+        .route("/users/:user_id/password", put(update_password))
         .route("/runs/:run_id", get(get_test_run).post(create_test_run))
         .route("/tests", post(create_test))
         .route("/tests/:test_id", get(get_test))
