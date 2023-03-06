@@ -1,6 +1,6 @@
 use super::AppState;
 use crate::{
-    domain::organization::UpdateForm,
+    domain::organization::OrgUpdateForm,
     prisma::organization,
     util::{app_error::AppError, validation::ValidatedForm},
 };
@@ -48,7 +48,7 @@ pub async fn get_organization(
 pub async fn update_organization(
     Path(org_id): Path<String>,
     State(state): State<AppState>,
-    ValidatedForm(org): ValidatedForm<UpdateForm>,
+    ValidatedForm(org): ValidatedForm<OrgUpdateForm>,
 ) -> Result<Response, AppError> {
     let data = state
         .db_client
