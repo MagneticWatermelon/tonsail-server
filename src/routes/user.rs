@@ -1,9 +1,9 @@
-use super::{
-    auth::{TonsailUser, TonsailUserStore},
-    AppState,
-};
+use super::AppState;
 use crate::{
-    domain::user::{UserPasswordForm, UserUpdateForm},
+    domain::{
+        auth::{AuthContext, TonsailUser},
+        user::{UserPasswordForm, UserUpdateForm},
+    },
     prisma::user,
     util::{
         app_error::AppError,
@@ -59,8 +59,6 @@ pub async fn update_user(
 
     Ok(Json(data).into_response())
 }
-
-type AuthContext = axum_login::extractors::AuthContext<TonsailUser, TonsailUserStore>;
 
 #[instrument(name = "Updating password", skip_all)]
 pub async fn update_password(

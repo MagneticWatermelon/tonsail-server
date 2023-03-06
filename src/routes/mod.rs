@@ -1,4 +1,4 @@
-use self::auth::{check_me, login, logout, register_new_user, TonsailUser};
+use self::auth::{check_me, login, logout, register_new_user};
 use self::layers::{add_auth_layer, add_cors_layer, add_trace_layer};
 use self::metrics::get_metrics;
 use self::organizations::{get_organizations, update_organization};
@@ -6,6 +6,7 @@ use self::project::{create_project, get_project, update_project};
 use self::test_run::{create_test_run, get_test_run};
 use self::tests::{create_test, get_test};
 use self::user::{get_user, update_password, update_user};
+use crate::domain::auth::TonsailUser;
 use crate::prisma::PrismaClient;
 use axum::routing::{get, post, put};
 use axum::Router;

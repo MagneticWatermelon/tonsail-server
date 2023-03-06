@@ -1,8 +1,8 @@
-use super::{
-    auth::{TonsailUser, TonsailUserStore},
-    AppState,
+use super::AppState;
+use crate::{
+    domain::auth::{TonsailUser, TonsailUserStore},
+    util::redis_session_store::RedisSessionStore,
 };
-use crate::util::redis_session_store::RedisSessionStore;
 use axum::{body::BoxBody, Router};
 use axum_login::{
     axum_sessions::{PersistencePolicy, SameSite, SessionLayer},
