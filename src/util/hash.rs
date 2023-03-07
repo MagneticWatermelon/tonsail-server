@@ -1,3 +1,4 @@
+use super::app_error::AppError;
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use rand::rngs::OsRng;
 
@@ -9,9 +10,10 @@ pub fn hash_password(password: &[u8]) -> String {
         .to_string()
 }
 
-pub fn check_hash(password: &[u8], hash: &str) -> bool {
+pub fn check_hash(password: &[u8], hash: &str) -> Result<(), AppError> {
     let parsed_hash = PasswordHash::new(hash).expect("Could not parse the hash");
-    Argon2::default()
-        .verify_password(password, &parsed_hash)
-        .is_ok()
+    match Argon2::default().verify_password(password, &parsed_hash) {
+        Ok(_) => Ok(()),
+        Err(_) => Err(AppError::UnAuthorized(format!("Wrong credentials"))),
+    }
 }

@@ -1,8 +1,8 @@
 use super::AppState;
 use crate::domain::auth::{AuthContext, AuthLoginForm, AuthRegisterForm, TonsailUser};
 use crate::prisma::{organization, user};
+use crate::util::app_error::AppError;
 use crate::util::hash::{check_hash, hash_password};
-use crate::util::http_error::HttpError;
 use crate::util::nano_id::generate_id;
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
@@ -11,16 +11,11 @@ use http::StatusCode;
 use prisma_client_rust::QueryError;
 use tracing::instrument;
 
-pub async fn check_me(auth: AuthContext) -> Response {
-    if let Some(user) = auth.current_user {
-        return Json(user).into_response();
+pub async fn check_me(auth: AuthContext) -> Result<Response, AppError> {
+    match auth.current_user {
+        Some(user) => Ok(Json(user).into_response()),
+        None => Err(AppError::UnAuthorized(format!("Token not found"))),
     }
-    HttpError::new(
-        StatusCode::UNAUTHORIZED,
-        "Not Authorized",
-        "Token not found",
-    )
-    .into_response()
 }
 
 #[instrument(name = "User attempting to logout", skip_all)]
@@ -34,33 +29,24 @@ pub async fn login(
     State(state): State<AppState>,
     mut auth: AuthContext,
     Form(user): Form<AuthLoginForm>,
-) -> Response {
+) -> Result<Response, AppError> {
     let resp = state
         .db_client
         .user()
         .find_first(vec![user::email::equals(user.email)])
         .exec()
-        .await
-        .unwrap();
+        .await?;
 
-    if resp.is_some() {
-        let data = resp.unwrap();
-        if !check_hash(user.password.as_bytes(), &data.password) {
-            HttpError::new(
-                StatusCode::UNAUTHORIZED,
-                "Login failed",
-                "Unable to login with provided credentials",
-            )
-            .into_response()
-        } else {
-            let user = TonsailUser::from(data.clone());
+    match resp {
+        Some(data) => {
+            check_hash(user.password.as_bytes(), &data.password)?;
+            let user = TonsailUser::from(data);
             match auth.login(&user).await {
-                Ok(_) => (StatusCode::OK, Json(user)).into_response(),
-                Err(_) => (StatusCode::UNAUTHORIZED, "").into_response(),
+                Ok(_) => Ok((StatusCode::OK, Json(user)).into_response()),
+                Err(_) => Err(AppError::UnAuthorized(format!("Unable to login"))),
             }
         }
-    } else {
-        HttpError::new(StatusCode::UNAUTHORIZED, "Login failed", "Unable to login").into_response()
+        _ => Err(AppError::UnAuthorized(format!("Unable to login"))),
     }
 }
 
@@ -68,24 +54,17 @@ pub async fn login(
 pub async fn register_new_user(
     State(state): State<AppState>,
     Form(user): Form<AuthRegisterForm>,
-) -> Response {
-    match create_user(State(state), Form(user)).await {
-        Ok((_new_org, new_user)) => Json(new_user).into_response(),
-        Err(e) => HttpError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Register failed",
-            e.to_string().as_str(),
-        )
-        .into_response(),
-    }
+) -> Result<Response, AppError> {
+    let user = create_user(State(state), Form(user)).await?;
+    Ok(Json(user).into_response())
 }
 
 #[instrument(name = "Writing new user with new organization to database", skip_all)]
 async fn create_user(
     State(state): State<AppState>,
     Form(user): Form<AuthRegisterForm>,
-) -> Result<(organization::Data, user::Data), QueryError> {
-    let (org, user) = state
+) -> Result<user::Data, QueryError> {
+    let (_org, user) = state
         .db_client
         ._transaction()
         .run(|client| async move {
@@ -111,5 +90,5 @@ async fn create_user(
         })
         .await?;
 
-    Ok((org, user))
+    Ok(user)
 }

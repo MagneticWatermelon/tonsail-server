@@ -8,7 +8,6 @@ use crate::{
     util::{
         app_error::AppError,
         hash::{check_hash, hash_password},
-        http_error::HttpError,
         validation::ValidatedForm,
     },
 };
@@ -17,7 +16,6 @@ use axum::{
     response::{IntoResponse, Response},
     Extension, Json,
 };
-use http::StatusCode;
 use tracing::instrument;
 
 #[instrument(name = "Fetching user", skip_all)]
@@ -68,13 +66,7 @@ pub async fn update_password(
     Extension(user): Extension<TonsailUser>,
     ValidatedForm(password): ValidatedForm<UserPasswordForm>,
 ) -> Result<Response, AppError> {
-    if !check_hash(password.old.as_bytes(), &user.password) {
-        return Err(AppError::Http(HttpError::new(
-            StatusCode::BAD_REQUEST,
-            "Unable to update password",
-            "Current password is invalid",
-        )));
-    }
+    check_hash(password.old.as_bytes(), &user.password)?;
     let hashed = hash_password(password.new.as_bytes());
 
     let data = state
@@ -87,10 +79,6 @@ pub async fn update_password(
     let user = TonsailUser::from(data.clone());
     match auth.login(&user).await {
         Ok(_) => Ok(Json(data).into_response()),
-        Err(_) => Err(AppError::Http(HttpError::new(
-            StatusCode::UNAUTHORIZED,
-            "Unable to login",
-            "Crendentials are invalid",
-        ))),
+        Err(_) => Err(AppError::UnAuthorized(format!("Crendentials are invalid"))),
     }
 }

@@ -1,20 +1,33 @@
-use super::http_error::HttpError;
+use axum::body;
+use axum::extract::rejection::{FormRejection, QueryRejection};
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 use prisma_client_rust::QueryError;
+use thiserror::Error;
 
 /// Our app's top level error type.
+#[derive(Debug, Error)]
 pub enum AppError {
-    Http(HttpError),
-    Db(QueryError),
-}
+    #[error("Not found: {0}")]
+    NotFound(String),
 
-/// This makes it possible to use `?` to automatically convert a `HttpError`
-/// into an `AppError`.
-impl From<HttpError> for AppError {
-    fn from(inner: HttpError) -> Self {
-        AppError::Http(inner)
-    }
+    #[error("Not authorized: {0}")]
+    UnAuthorized(String),
+
+    #[error("Require Admin privileges for {0}")]
+    RequireAdmin(String),
+
+    #[error(transparent)]
+    Db(QueryError),
+
+    #[error(transparent)]
+    ValidationError(#[from] validator::ValidationErrors),
+
+    #[error(transparent)]
+    AxumFormRejection(#[from] FormRejection),
+
+    #[error(transparent)]
+    AxumQueryRejection(#[from] QueryRejection),
 }
 
 impl From<QueryError> for AppError {
@@ -25,17 +38,22 @@ impl From<QueryError> for AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        match self {
-            AppError::Http(e) => e.into_response(),
-            AppError::Db(QueryError::Execute(e)) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, e.message().to_owned()).into_response()
-            }
-            AppError::Db(QueryError::Serialize(_)) => {
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
-            }
-            AppError::Db(QueryError::Deserialize(_)) => {
-                StatusCode::INTERNAL_SERVER_ERROR.into_response()
-            }
-        }
+        let status = match self {
+            AppError::NotFound(_) => StatusCode::NOT_FOUND,
+            AppError::UnAuthorized(_) => StatusCode::UNAUTHORIZED,
+            AppError::RequireAdmin(_) => StatusCode::FORBIDDEN,
+            AppError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            AppError::AxumFormRejection(_) => StatusCode::BAD_REQUEST,
+            AppError::AxumQueryRejection(_) => StatusCode::BAD_REQUEST,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+        let e = &self;
+        let body = body::boxed(body::Full::from(e.to_string()));
+        tracing::error!(error = e.to_string());
+        axum::response::Response::builder()
+            .header("Content-Type", "text/plain")
+            .status(status)
+            .body(body)
+            .unwrap()
     }
 }

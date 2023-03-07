@@ -1,15 +1,14 @@
+use super::app_error::AppError;
 use axum::{
     async_trait,
     extract::{
         rejection::{FormRejection, QueryRejection},
         FromRequest, Query,
     },
-    response::{IntoResponse, Response},
     Form,
 };
-use http::{Request, StatusCode};
+use http::Request;
 use serde::de::DeserializeOwned;
-use thiserror::Error;
 use validator::Validate;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -26,7 +25,7 @@ where
     Form<T>: FromRequest<S, B, Rejection = FormRejection>,
     B: Send + 'static,
 {
-    type Rejection = ServerError;
+    type Rejection = AppError;
 
     async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
         let Form(value) = Form::<T>::from_request(req, state).await?;
@@ -43,37 +42,11 @@ where
     Query<T>: FromRequest<S, B, Rejection = QueryRejection>,
     B: Send + 'static,
 {
-    type Rejection = ServerError;
+    type Rejection = AppError;
 
     async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
         let Query(value) = Query::<T>::from_request(req, state).await?;
         value.validate()?;
         Ok(ValidatedQuery(value))
-    }
-}
-
-#[derive(Debug, Error)]
-pub enum ServerError {
-    #[error(transparent)]
-    ValidationError(#[from] validator::ValidationErrors),
-
-    #[error(transparent)]
-    AxumFormRejection(#[from] FormRejection),
-
-    #[error(transparent)]
-    AxumQueryRejection(#[from] QueryRejection),
-}
-
-impl IntoResponse for ServerError {
-    fn into_response(self) -> Response {
-        match self {
-            ServerError::ValidationError(_) => {
-                let message = format!("Input validation error: [{}]", self).replace('\n', ", ");
-                (StatusCode::BAD_REQUEST, message)
-            }
-            ServerError::AxumFormRejection(_) => (StatusCode::BAD_REQUEST, self.to_string()),
-            ServerError::AxumQueryRejection(_) => (StatusCode::BAD_REQUEST, self.to_string()),
-        }
-        .into_response()
     }
 }
