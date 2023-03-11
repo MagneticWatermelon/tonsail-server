@@ -32,14 +32,15 @@ async fn main() {
         .expect("Failed to get Prisma client");
 
     // set up connection pool for QuestDB
-    let manager =
-        PostgresConnectionManager::new_from_stringlike(&config.questdb.url, NoTls).unwrap();
+    let manager = PostgresConnectionManager::new_from_stringlike(&config.questdb.url, NoTls)
+        .expect("Failed to create Postgres config");
 
     let pool = Pool::builder().build(manager).await.unwrap();
 
     // Redis pool creation
-    let rds_config = RedisConfig::from_url(&config.redis.url).unwrap();
-    let rds_pool = RedisPool::new(rds_config, None, None, 6).unwrap();
+    let rds_config =
+        RedisConfig::from_url(&config.redis.url).expect("Failed to create Redis config");
+    let rds_pool = RedisPool::new(rds_config, None, None, 6).expect("Failed to create Redis pool");
     rds_pool.connect();
     rds_pool
         .wait_for_connect()
