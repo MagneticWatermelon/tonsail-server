@@ -1,8 +1,7 @@
-use bb8::Pool;
-use bb8_postgres::PostgresConnectionManager;
-use fred::{pool::RedisPool, types::RedisConfig};
-use tokio_postgres::NoTls;
-use tonsail_server::{configuration::get_configuration, run, util::retry::try_build_prisma};
+use backon::ExponentialBuilder;
+use backon::Retryable;
+use tonsail_server::configuration::get_configuration;
+use tonsail_server::{run, try_connect_postgres, try_connect_prisma, try_connect_redis};
 use tracing::{info, subscriber::set_global_default};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, EnvFilter, Registry};
 
@@ -27,27 +26,22 @@ async fn main() {
 
     let config = get_configuration().expect("Failed to read configuration");
 
-    let client = try_build_prisma(3)
+    let prisma_client = try_connect_prisma
+        .retry(&ExponentialBuilder::default())
         .await
         .expect("Failed to get Prisma client");
 
-    // set up connection pool for QuestDB
-    let manager = PostgresConnectionManager::new_from_stringlike(&config.questdb.url, NoTls)
-        .expect("Failed to create Postgres config");
+    let pg_pool = { || try_connect_postgres(&config.questdb.url) }
+        .retry(&ExponentialBuilder::default())
+        .await
+        .expect("Could not connect to Postgres");
 
-    let pool = Pool::builder().build(manager).await.unwrap();
-
-    // Redis pool creation
-    let rds_config =
-        RedisConfig::from_url(&config.redis.url).expect("Failed to create Redis config");
-    let rds_pool = RedisPool::new(rds_config, None, None, 6).expect("Failed to create Redis pool");
-    rds_pool.connect();
-    rds_pool
-        .wait_for_connect()
+    let rds_pool = { || try_connect_redis(&config.redis.url) }
+        .retry(&ExponentialBuilder::default())
         .await
         .expect("Could not connect to Redis");
 
     let addr = config.application.address_string();
 
-    run(&addr, client, rds_pool, pool, config.secret).await
+    run(&addr, prisma_client, rds_pool, pg_pool, config.secret).await
 }

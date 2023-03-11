@@ -1,11 +1,12 @@
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
-use fred::pool::RedisPool;
+use fred::{pool::RedisPool, prelude::RedisError, types::RedisConfig};
 use prisma::PrismaClient;
+use prisma_client_rust::NewClientError;
 use routes::{create_router, AppState};
 use std::{net::SocketAddr, str::FromStr};
 use tokio_postgres::NoTls;
-use tracing::info;
+use tracing::{info, instrument};
 
 pub mod configuration;
 pub mod domain;
@@ -26,4 +27,28 @@ pub async fn run(
     let server = axum::Server::bind(&addr).serve(router.into_make_service());
     info!("Listening on {}", server.local_addr());
     server.await.unwrap()
+}
+
+#[instrument(name = "Connecting Prisma")]
+pub async fn try_connect_prisma() -> Result<PrismaClient, NewClientError> {
+    PrismaClient::_builder().build().await
+}
+
+#[instrument(name = "Connecting Postgres")]
+pub async fn try_connect_redis(url: &str) -> Result<RedisPool, RedisError> {
+    // Redis pool creation
+    let rds_config = RedisConfig::from_url(url)?;
+    let rds_pool = RedisPool::new(rds_config, None, None, 6)?;
+    rds_pool.connect();
+    rds_pool.wait_for_connect().await?;
+    Ok(rds_pool)
+}
+
+#[instrument(name = "Connecting Redis")]
+pub async fn try_connect_postgres(
+    url: &str,
+) -> Result<Pool<PostgresConnectionManager<NoTls>>, tokio_postgres::Error> {
+    // set up connection pool for QuestDB
+    let manager = PostgresConnectionManager::new_from_stringlike(url, NoTls)?;
+    Pool::builder().build(manager).await
 }

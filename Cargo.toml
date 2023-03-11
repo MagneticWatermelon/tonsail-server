@@ -45,3 +45,4 @@ thiserror = "1.0.38"
 fred = { git = "https://github.com/aembke/fred.rs.git", features = ["partial-tracing", "enable-rustls"] }
 futures = "0.3.26"
 unicode-segmentation = "1.10.1"
+backon = "0.4.0"
