@@ -1,19 +1,16 @@
 name: Tonsail General CI/CD
-
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
-
+    branches: ["master"]
 env:
   CARGO_TERM_COLOR: always
   SQLX_VERSION: 0.6.2
   SQLX_FEATURES: "rustls,postgres"
   DB_DATABASE: tonsail
-  DB_USER: admin
-  DB_PASSWORD: password
-
+  DB_USER: root
+  DB_PASSWORD: root
 jobs:
   test:
     name: Test
@@ -37,7 +34,7 @@ jobs:
         run: |
           sudo /etc/init.d/mysql start
           mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-      - name: Generate Prima Client
+      - name: Generate Prisma Client
         run: cargo prisma generate
       - name: Migrate database
         run: cargo prisma db push
