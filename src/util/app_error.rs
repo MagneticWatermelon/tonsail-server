@@ -21,6 +21,9 @@ pub enum AppError {
     Db(QueryError),
 
     #[error(transparent)]
+    ServerError(#[from] hyper::Error),
+
+    #[error(transparent)]
     PostgresError(#[from] sqlx::Error),
 
     #[error(transparent)]
