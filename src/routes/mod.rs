@@ -11,13 +11,11 @@ use crate::prisma::PrismaClient;
 use axum::routing::{get, post, put};
 use axum::Router;
 use axum_login::RequireAuthorizationLayer;
-use bb8::Pool;
-use bb8_postgres::PostgresConnectionManager;
 use fred::pool::RedisPool;
 use health_check::health_check;
 use organizations::get_organization;
+use sqlx::{Pool, Postgres};
 use std::sync::Arc;
-use tokio_postgres::NoTls;
 
 pub mod auth;
 pub mod health_check;
@@ -32,7 +30,7 @@ pub mod user;
 #[derive(Clone)]
 pub struct AppState {
     db_client: Arc<PrismaClient>,
-    pg_client: Pool<PostgresConnectionManager<NoTls>>,
+    pg_client: Pool<Postgres>,
     rds_client: RedisPool,
     secret: Vec<u8>,
 }
@@ -41,7 +39,7 @@ impl AppState {
     pub fn new(
         client: PrismaClient,
         rds_client: RedisPool,
-        pg_client: Pool<PostgresConnectionManager<NoTls>>,
+        pg_client: Pool<Postgres>,
         secret: Vec<u8>,
     ) -> Self {
         Self {

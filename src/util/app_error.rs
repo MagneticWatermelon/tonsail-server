@@ -21,6 +21,9 @@ pub enum AppError {
     Db(QueryError),
 
     #[error(transparent)]
+    PostgresError(#[from] sqlx::Error),
+
+    #[error(transparent)]
     ValidationError(#[from] validator::ValidationErrors),
 
     #[error(transparent)]

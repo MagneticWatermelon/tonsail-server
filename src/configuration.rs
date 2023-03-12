@@ -1,6 +1,7 @@
 use config::Config;
 use serde::Deserialize;
 use serde_aux::prelude::{deserialize_number_from_string, deserialize_vec_from_string_or_vec};
+use tracing::info;
 
 #[derive(Deserialize)]
 pub struct Settings {
@@ -54,6 +55,19 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         .unwrap_or_else(|_| "local".into())
         .try_into()
         .expect("Failed to parse APP_ENVIRONMENT");
+
+    match environment {
+        Environment::Local => {
+            if let Err(_) = dotenvy::from_filename(".local.env") {
+                info!("No .local.env is found");
+            }
+        }
+        Environment::Production => {
+            if let Err(_) = dotenvy::dotenv() {
+                info!("No .env is found");
+            }
+        }
+    }
 
     let settings = Config::builder()
         .add_source(config::File::from(config_dir.join("base")).required(true))

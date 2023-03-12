@@ -2,17 +2,11 @@ use backon::ExponentialBuilder;
 use backon::Retryable;
 use tonsail_server::configuration::get_configuration;
 use tonsail_server::{run, try_connect_postgres, try_connect_prisma, try_connect_redis};
-use tracing::{info, subscriber::set_global_default};
+use tracing::subscriber::set_global_default;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, EnvFilter, Registry};
 
 #[tokio::main]
 async fn main() {
-    match dotenvy::dotenv() {
-        Ok(_) => {}
-        Err(_) => {
-            info!("No .env file found");
-        }
-    }
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
     let formatting_layer = tracing_subscriber::fmt::layer()
