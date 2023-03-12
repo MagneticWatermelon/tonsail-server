@@ -43,3 +43,4 @@ fred = { git = "https://github.com/aembke/fred.rs.git", features = ["partial-tra
 futures = "0.3.26"
 unicode-segmentation = "1.10.1"
 backon = "0.4.0"
+# async-stripe = { version = "*", default-features = false, features = ["runtime-tokio-hyper", "billing", "webhook-events", "checkout", "connect"] }
