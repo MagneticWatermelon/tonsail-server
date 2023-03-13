@@ -11,6 +11,7 @@ env:
   DB_DATABASE: tonsail
   DB_USER: root
   DB_PASSWORD: root
+  DATABASE_URL: "mysql://root:root@localhost:3306/tonsail"
 jobs:
   test:
     name: Test
