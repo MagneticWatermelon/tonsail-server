@@ -8,9 +8,9 @@ env:
   CARGO_TERM_COLOR: always
   SQLX_VERSION: 0.6.2
   SQLX_FEATURES: "rustls,postgres"
-  DB_DATABASE: tonsail
-  DB_USER: root
-  DB_PASSWORD: root
+  DATABASE_NAME: tonsail
+  DATABASE_USER: root
+  DTABASE_PASSWORD: root
   DATABASE_URL: "mysql://root:root@localhost:3306/tonsail"
 jobs:
   test:
@@ -34,7 +34,7 @@ jobs:
       - name: Set up MySQL
         run: |
           sudo /etc/init.d/mysql start
-          mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE ${{ env.DATABASE_NAME }};' -u${{ env.DATABASE_USER }} -p${{ env.DATABASE_PASSWORD }}
       - name: Generate Prisma Client
         run: cargo prisma generate
       - name: Migrate database
