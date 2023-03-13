@@ -63,7 +63,7 @@ pub struct MetricQuery {
 }
 
 fn default_limit() -> u64 {
-    return 10;
+    10
 }
 
 #[instrument(name = "Getting metrics", skip_all)]

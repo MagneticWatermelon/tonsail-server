@@ -112,7 +112,7 @@ pub struct AuthRegisterForm {
 pub fn validate_password(password: &str) -> Result<(), ValidationError> {
     let is_empty = password.trim().is_empty();
     let is_too_short = password.graphemes(true).count() < 8;
-    let does_not_contains_number = !password.chars().any(|g| g.is_digit(10));
+    let does_not_contains_number = !password.chars().any(|g| g.is_ascii_digit());
     let does_not_contains_lowercase = !password.chars().any(|g| g.is_lowercase());
     let does_not_contains_uppercase = !password.chars().any(|g| g.is_uppercase());
     let does_not_contains_special = !password.chars().any(|g| g.is_ascii_punctuation());

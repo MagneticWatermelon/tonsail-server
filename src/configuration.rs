@@ -58,12 +58,12 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 
     match environment {
         Environment::Local => {
-            if let Err(_) = dotenvy::from_filename(".local.env") {
+            if dotenvy::from_filename(".local.env").is_err() {
                 info!("No .local.env is found");
             }
         }
         Environment::Production => {
-            if let Err(_) = dotenvy::dotenv() {
+            if dotenvy::dotenv().is_err() {
                 info!("No .env is found");
             }
         }

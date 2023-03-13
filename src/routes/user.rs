@@ -79,6 +79,8 @@ pub async fn update_password(
     let user = TonsailUser::from(data.clone());
     match auth.login(&user).await {
         Ok(_) => Ok(Json(data).into_response()),
-        Err(_) => Err(AppError::UnAuthorized(format!("Crendentials are invalid"))),
+        Err(_) => Err(AppError::UnAuthorized(
+            "Crendentials are invalid".to_string(),
+        )),
     }
 }

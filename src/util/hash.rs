@@ -14,6 +14,6 @@ pub fn check_hash(password: &[u8], hash: &str) -> Result<(), AppError> {
     let parsed_hash = PasswordHash::new(hash).expect("Could not parse the hash");
     match Argon2::default().verify_password(password, &parsed_hash) {
         Ok(_) => Ok(()),
-        Err(_) => Err(AppError::UnAuthorized(format!("Wrong credentials"))),
+        Err(_) => Err(AppError::UnAuthorized("Wrong credentials".to_string())),
     }
 }

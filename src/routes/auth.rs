@@ -14,7 +14,7 @@ use tracing::instrument;
 pub async fn check_me(auth: AuthContext) -> Result<Response, AppError> {
     match auth.current_user {
         Some(user) => Ok(Json(user).into_response()),
-        None => Err(AppError::UnAuthorized(format!("Token not found"))),
+        None => Err(AppError::UnAuthorized("Token not found".to_string())),
     }
 }
 
@@ -43,10 +43,10 @@ pub async fn login(
             let user = TonsailUser::from(data);
             match auth.login(&user).await {
                 Ok(_) => Ok((StatusCode::OK, Json(user)).into_response()),
-                Err(_) => Err(AppError::UnAuthorized(format!("Unable to login"))),
+                Err(_) => Err(AppError::UnAuthorized("Unable to login".to_string())),
             }
         }
-        _ => Err(AppError::UnAuthorized(format!("Unable to login"))),
+        _ => Err(AppError::UnAuthorized("Unable to login".to_string())),
     }
 }
 
