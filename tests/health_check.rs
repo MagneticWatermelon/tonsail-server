@@ -1,6 +1,6 @@
 use http::{Request, StatusCode};
 use hyper::Body;
-use tonsail_server::{configuration::get_configuration, prisma::PrismaClient, routes::Application};
+use tonsail_server::{configuration::get_configuration, prisma::PrismaClient, Application};
 use tower::ServiceExt;
 
 #[tokio::test]

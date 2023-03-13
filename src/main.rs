@@ -1,5 +1,5 @@
 use tonsail_server::{
-    configuration::get_configuration, routes::Application, util::tracing::initialize_tracing,
+    configuration::get_configuration, util::tracing::initialize_tracing, Application,
 };
 
 #[tokio::main]
