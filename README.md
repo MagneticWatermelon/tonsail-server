@@ -8,9 +8,10 @@ You'll need to install:
 - [Docker](https://docs.docker.com/get-docker/)
 
 ## Optional
-- [dotenv-cli](https://github.com/entropitor/dotenv-cli) for managing multiple .env files
 
-## How to run
+- [dotenv-cli](https://github.com/entropitor/dotenv-cli) for multiple .env files
+
+## How to run/test
 
 ### In order to get the instances up and running either run
 
@@ -43,6 +44,7 @@ Launch a Redis instance via Docker:
 ```bash
 mv .local.env .env
 ```
+
 ### Generate Prisma Client
 
 ```bash
@@ -55,8 +57,25 @@ cargo prisma generate
 cargo prisma db push
 ```
 
-### Run with `cargo`:
+### Test with `cargo`
+
+```bash
+cargo test
+```
+
+### Run with `cargo`
 
 ```bash
 cargo run
 ```
+
+## Note
+
+When using multiple .env files, run Prisma related commands by providing a .env file
+manually via dotenv-cli like this:
+
+```bash
+dotenv -e .local.env -- cargo prisma db push
+```
+
+Related [Prisma Docs](https://www.prisma.io/docs/guides/development-environment/environment-variables/using-multiple-env-files)
