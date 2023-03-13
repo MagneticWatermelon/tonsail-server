@@ -49,6 +49,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: sqlx-${{ env.SQLX_VERSION }}
+      - name: Generate Prisma Client
+        run: cargo prisma generate
       - name: Enforce formatting
         run: cargo fmt --check
   clippy:
