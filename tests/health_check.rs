@@ -7,7 +7,6 @@ use tower::ServiceExt;
 async fn returns_200_when_application_is_healthy() {
     let config = get_configuration().unwrap();
     let app = Application::build(config).await.unwrap();
-
     let response = app
         .router
         .oneshot(
