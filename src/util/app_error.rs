@@ -18,7 +18,7 @@ pub enum AppError {
     RequireAdmin(String),
 
     #[error(transparent)]
-    Db(QueryError),
+    DatabaseError(#[from] QueryError),
 
     #[error(transparent)]
     ServerError(#[from] hyper::Error),
@@ -36,18 +36,13 @@ pub enum AppError {
     AxumQueryRejection(#[from] QueryRejection),
 }
 
-impl From<QueryError> for AppError {
-    fn from(inner: QueryError) -> Self {
-        AppError::Db(inner)
-    }
-}
-
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let status = match self {
             AppError::NotFound(_) => StatusCode::NOT_FOUND,
             AppError::UnAuthorized(_) => StatusCode::UNAUTHORIZED,
             AppError::RequireAdmin(_) => StatusCode::FORBIDDEN,
+            AppError::DatabaseError(_) => StatusCode::BAD_REQUEST,
             AppError::ValidationError(_) => StatusCode::BAD_REQUEST,
             AppError::AxumFormRejection(_) => StatusCode::BAD_REQUEST,
             AppError::AxumQueryRejection(_) => StatusCode::BAD_REQUEST,
