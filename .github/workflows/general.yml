@@ -5,6 +5,7 @@ on:
   pull_request:
     branches: ["master"]
 env:
+  APP_ENVIRONMENT: test
   CARGO_TERM_COLOR: always
   SQLX_VERSION: 0.6.2
   SQLX_FEATURES: "rustls,postgres"
