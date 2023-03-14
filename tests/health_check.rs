@@ -1,11 +1,10 @@
 use http::{Request, StatusCode};
 use hyper::Body;
-use tonsail_server::{configuration::get_configuration, prisma::PrismaClient, Application};
+use tonsail_server::{configuration::get_configuration, Application};
 use tower::ServiceExt;
 
 #[tokio::test]
 async fn returns_200_when_application_is_healthy() {
-    let (_client, _mock) = PrismaClient::_mock();
     let config = get_configuration().unwrap();
     let app = Application::build(config).await.unwrap();
 
