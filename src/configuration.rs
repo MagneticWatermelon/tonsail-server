@@ -57,14 +57,14 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         .expect("Failed to parse APP_ENVIRONMENT");
 
     match environment {
-        Environment::Local => {
-            if dotenvy::from_filename(".local.env").is_err() {
-                info!("No .local.env is found");
-            }
-        }
         Environment::Production => {
             if dotenvy::dotenv().is_err() {
                 info!("No .env is found");
+            }
+        }
+        _ => {
+            if dotenvy::from_filename(".local.env").is_err() {
+                info!("No .local.env is found");
             }
         }
     }
@@ -83,6 +83,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 pub enum Environment {
     Local,
     Production,
+    Test,
 }
 
 impl Environment {
@@ -90,6 +91,7 @@ impl Environment {
         match self {
             Environment::Local => "local",
             Environment::Production => "production",
+            Environment::Test => "test",
         }
     }
 }
@@ -101,6 +103,7 @@ impl TryFrom<String> for Environment {
         match value.to_lowercase().as_str() {
             "local" => Ok(Self::Local),
             "production" => Ok(Self::Production),
+            "test" => Ok(Self::Test),
             other => Err(format!(
                 "{other} is not a supported environment. Use either 'local or 'production",
             )),
