@@ -92,14 +92,14 @@ where
     }
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Validate, Serialize, Deserialize)]
 pub struct AuthLoginForm {
     #[validate(email)]
     pub email: String,
     pub password: String,
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Validate, Serialize, Deserialize)]
 pub struct AuthRegisterForm {
     #[validate(length(min = "MIN_NAME_LENGTH", max = "MAX_NAME_LENGTH"))]
     pub name: String,

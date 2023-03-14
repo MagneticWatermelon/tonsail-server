@@ -4360,6 +4360,7 @@ dependencies = [
  "sea-query",
  "serde",
  "serde-aux",
+ "serde_urlencoded",
  "sqlx",
  "thiserror",
  "tokio",
