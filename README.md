@@ -60,7 +60,7 @@ cargo prisma db push
 ### Test with `cargo`
 
 ```bash
-cargo test
+APP_ENVIRONMENT=test cargo test
 ```
 
 ### Run with `cargo`
