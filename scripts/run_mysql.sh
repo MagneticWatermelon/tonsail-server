@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-set -x
 set -eo pipefail
 
-# if a redis container is running, print instructions to kill it and exit
+# if a MySQL container is running, print instructions to kill it and exit
 RUNNING_CONTAINER=$(docker ps --filter 'name=mysql' --format '{{.ID}}')
 if [[ -n $RUNNING_CONTAINER ]]; then
   echo >&2 "there is a MySQL instance already running, kill it with"
