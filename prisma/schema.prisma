@@ -82,8 +82,16 @@ model TestRun {
   status    RunStatus @default(NOT_STARTED)
 
   // Projects relation
-  test      Test      @relation(fields: [testId], references: [id])
-  testId    String
+  test   Test   @relation(fields: [testId], references: [id])
+  testId String
+}
+
+model MetricsCatalog {
+  id          Int    @id @default(autoincrement())
+  name        String @db.VarChar(50)
+  type        String @db.VarChar(50)
+  unit        String @db.VarChar(20)
+  description String @db.VarChar(255)
 }
 
 model Token {

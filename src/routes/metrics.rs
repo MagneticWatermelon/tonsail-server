@@ -67,6 +67,18 @@ fn default_limit() -> u64 {
 }
 
 #[instrument(name = "Getting metrics", skip_all)]
+pub async fn get_metrics_catalog(State(state): State<AppState>) -> Result<Response, AppError> {
+    let catalog = state
+        .db_client
+        .metrics_catalog()
+        .find_many(vec![])
+        .exec()
+        .await?;
+
+    Ok(Json(catalog).into_response())
+}
+
+#[instrument(name = "Getting metrics", skip_all)]
 pub async fn get_metrics(
     State(state): State<AppState>,
     Query(params): Query<MetricQuery>,

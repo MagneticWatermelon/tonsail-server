@@ -1,6 +1,6 @@
 use self::auth::{check_me, login, logout, register_new_user};
 use self::layers::{add_auth_layer, add_cors_layer, add_trace_layer};
-use self::metrics::get_metrics;
+use self::metrics::{get_metrics, get_metrics_catalog};
 use self::organizations::{get_organizations, update_organization};
 use self::project::{create_project, get_project, update_project};
 use self::test_run::{create_test_run, get_test_run};
@@ -29,6 +29,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/me", get(check_me))
         .route("/logout", post(logout))
         .route("/metrics", get(get_metrics))
+        .route("/metrics/catalog", get(get_metrics_catalog))
         .route("/users/:user_id", get(get_user).put(update_user))
         .route("/users/:user_id/password", put(update_password))
         .route("/runs/:run_id", get(get_test_run).post(create_test_run))
