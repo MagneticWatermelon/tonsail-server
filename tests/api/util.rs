@@ -1,3 +1,4 @@
+use prisma_client_rust::raw;
 use sqlx::{Connection, PgConnection};
 use tonsail_server::{
     prisma::{organization, user, PrismaClient},
@@ -36,6 +37,24 @@ pub async fn seed_database() {
             .exec()
             .await
             .unwrap();
+
+        let _catalog = client
+            ._execute_raw(raw!(
+            "INSERT INTO tonsail.MetricsCatalog (label,value,`group`,unit,description) VALUES
+            ('VUs', 'vus', 'general', 'count', 'The number of virtual users'),
+            ('Request rate', 'http_request_rate', 'HTTP', 'rps', 'The rate at which requests are made to a given URL'),
+            ('Response time', 'http_response_rate', 'HTTP', 'ms', 'The time spent waiting for the full response'),
+            ('Failure rate', 'http_failure_rate', 'HTTP', '%', 'The percentage of requests that resulted in a failure'),
+            ('Handshake time', 'http_handshake_time', 'HTTP', 'ms', 'The time it takes to establish a connection with the server'),
+            ('Waiting time', 'http_waiting_time', 'HTTP', 'ms', 'The time spent waiting for a response from the server'),
+            ('Blocked time', 'http_blocked_time', 'HTTP', 'ms', 'The time spent waiting for an available connection slot'),
+            ('Sent data', 'http_sent_bytes', 'HTTP', 'bytes', 'The amount of data sent in the request'),
+            ('Received data', 'http_recv_bytes', 'HTTP', 'bytes', 'The amount of data received in the response'),
+            ('CPU usage', 'cpu_usage', 'System', '%', 'The percentage of CPU utilization'),
+            ('Memory usage', 'mem_usage', 'System', '%', 'The percentage of memory utilization');"
+            ))
+            .exec()
+            .await.unwrap();
     }
 
     // QuestDB seeding
