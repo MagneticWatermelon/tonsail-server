@@ -88,8 +88,9 @@ model TestRun {
 
 model MetricsCatalog {
   id          Int    @id @default(autoincrement())
-  name        String @db.VarChar(50)
-  type        String @db.VarChar(50)
+  label       String @db.VarChar(50)
+  value       String @db.VarChar(50)
+  group       String @db.VarChar(50)
   unit        String @db.VarChar(20)
   description String @db.VarChar(255)
 }
